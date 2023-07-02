@@ -1,0 +1,259 @@
+header {
+  position: relative;
+  z-index: 100;
+}
+
+.menuBox {
+  .socBox {
+    display: none;
+    padding-bottom: 50px;
+    li {
+      a {
+        line-height: 1;
+        padding: 15px 0;
+        display: block;
+        font-size: 24px;
+        color: $c2;
+        text-decoration: none;
+      }
+    }
+  }
+  @include rwd-max(1080){
+    position: fixed;
+    top: 0;
+    width: 100%;
+    @include transition();
+    visibility: hidden;
+    opacity: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    z-index: -1;
+    background: #fff;
+    color: $c2;
+    @include flexbox;
+    .menuContent {
+      height: 100%;
+      width: 100%;
+      @include flex-direction(column);
+      padding: 28px 4% 0;
+    }
+    .socBox {
+      display: block;
+    }
+  }
+}
+
+#mainMenu {
+  @include rwd-max(1080){
+    ul {
+      li {
+        display: inline-block;
+        width: 100%;
+        padding: 0;
+        a {
+          font-size: 38px;
+          color: $c;
+          line-height: 1;
+          padding: 15px 0;
+          display: block;
+          text-decoration: none;
+        }
+        &.current-menu-item a {
+          color: $bg;
+        }
+        span {
+          width: 60px;
+          background: $bg;
+          position: absolute;
+          right: 0;
+          top: 0;
+          bottom: 0;
+          cursor: pointer;
+          &:before {
+            content: "";
+            @include center();
+            background: #fff;
+            width: 18px;
+            height: 2px;
+            @include transition();
+          }
+          &:after {
+            content: "";
+            @include center();
+            background: #fff;
+            width: 2px;
+            height: 18px;
+            @include transition();
+          }
+          &.active {
+            &:after {
+              opacity: 0;
+            }
+          }
+        }
+        ul {
+          li {
+            a {
+              font-size: 18px;
+            }
+            span {
+              background: none;
+            }
+            &.current-menu-item a {
+              background: $bg;
+              color: $c2;
+            }
+            ul {
+              li {
+                a {
+                  font-size: 16px;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  @include rwd-min(1081){
+    > ul {
+      font-size: 0;
+      > li {
+        display: inline-block;
+        vertical-align: top;
+        position: relative;
+        margin: 0 12px;
+        > a {
+          padding: 7px 0;
+          display: block;
+          color: $c;
+          font-size: 16px;
+          position: relative;
+          &:after {
+            content: "";
+            position: absolute;
+            width: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 2px;
+            background: $bg;
+            @include transition();
+          }
+        }
+        &:hover > a, &.current-menu-item > a, &.current-menu-parent > a {
+          text-decoration: none;
+          color: $bg;
+          &:after {
+            width: 100%;
+          }
+        }
+        &:hover > ul {
+          margin-top: 0;
+          opacity: 1;
+          visibility: visible;
+        }
+        ul {
+          margin-top: 20px;
+          opacity: 0;
+          visibility: hidden;
+          width: 270px;
+          position: absolute;
+          left: 0;
+          top: 100%;
+          background: $bg;
+          @include transition();
+          li {
+            position: relative;
+            a {
+              display: block;
+              padding: 7px 18px;
+              font-size: 16px;
+              color: $c2;
+              text-decoration: none;
+            }
+            &:hover, &.current-menu-item {
+              > a {
+                color: $bg;
+                background: $c2;
+              }
+            }
+            &:hover ul {
+              visibility: visible;
+              opacity: 1;
+              margin-top: 0;
+            }
+            ul {
+              left: 270px;
+              top: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+//MENU BUTTON
+$line: 2px;
+// The thickness of the button lines, also need to improve -> &:after {top: ?px} !
+$line-position: 12px;
+// The spacing between lines, also need to improve -> &:after {top: ?px} !
+$button-color: $c;
+// The color of button
+#menuOpen {
+  position: relative;
+  z-index: 120;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  @include transition();
+  &:before, &:after {
+    content: "";
+    position: absolute;
+    top: 9px;
+    left: 0;
+    right: 0;
+    height: $line;
+    box-shadow: 0 $line 0 0 $button-color, 0 $line-position 0 0 $button-color;
+    -webkit-box-shadow: 0 $line 0 0 $button-color, 0 $line-position 0 0 $button-color;
+    -moz-box-shadow: 0 $line 0 0 $button-color, 0 $line-position 0 0 $button-color;
+    @include transition();
+  }
+  &:after {
+    content: "";
+    position: absolute;
+    top: 9px; // Need to improve if both $line-thickness and $line-position changed !
+    height: $line;
+    @include box-shadow(0 $line 0 0 $button-color);
+    opacity: 0;
+  }
+  &.opened {
+    &:before, &:after {
+      top: 4px;
+      left: 0;
+      right: 0;
+      background: $button-color;
+      box-shadow: none;
+    }
+    &:before {
+      @include backface-visibility();
+      @include transform(rotate(-45deg) translate(-7px, 7px));
+    }
+    &:after {
+      @include backface-visibility();
+      @include transform(rotate(45deg) translate(7px, 7px));
+      opacity: 1;
+    }
+    & + .menuBox {
+      visibility: visible;
+      opacity: 1;
+      z-index: 110;
+    }
+  }
+
+  @include rwd-min(1081){
+    display: none;
+  }
+}
