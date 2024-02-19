@@ -6,16 +6,16 @@
     </div>
 </section>
 
-<section class="posts__holder">
+<section class="content">
     <div class="container">
-        <div class="posts__container">
-            <?php if ( function_exists( 'load_posts_ajax' ) ) :
+        <div class="posts blogAjax">
+            <?php if ( function_exists( 'load_posts_ajax' ) ) {
                 load_posts_ajax();
-            else :
+            } else {
                 if ( have_posts() ) : while ( have_posts() ) : the_post();
                     get_template_part( 'tpl-parts/post-item' );
                 endwhile; endif;
-            endif; ?>
+            } ?>
         </div>
     </div>
 </section>

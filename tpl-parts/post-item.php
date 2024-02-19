@@ -1,5 +1,5 @@
-<article class="post_item">
-    <a class="post_item__thumb" href="<?php the_permalink(); ?>" aria-hidden="true" tabindex="-1">
+<article class="post">
+    <a class="thumb" href="<?php the_permalink(); ?>" aria-hidden="true" tabindex="-1">
         <?php $img_id = get_post_thumbnail_id( get_the_ID() ); ?>
         <?php echo wp_get_attachment_image( $img_id, 'full', false, array( 'alt' => get_alt( $img_id ) ) ); ?>
     </a>
