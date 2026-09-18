@@ -14,11 +14,12 @@
             <?php
             if ( function_exists( 'render_posts_ajax' ) ) {
                 render_posts_ajax();
-            } elseif ( have_posts() ) :
-                while ( have_posts() ) : the_post();
+            } elseif ( have_posts() ) {
+                while ( have_posts() ) {
+                    the_post();
                     get_template_part( 'tpl-parts/post-item' );
-                endwhile;
-            endif;
+                }
+            }
             ?>
         </div>
     </div>
