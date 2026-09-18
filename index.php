@@ -8,14 +8,18 @@
 
 <section class="content">
     <div class="container">
-        <div class="posts blogAjax">
-            <?php if ( function_exists( 'load_posts_ajax' ) ) {
-                load_posts_ajax();
-            } else {
-                if ( have_posts() ) : while ( have_posts() ) : the_post();
+        <?php get_template_part( 'tpl-parts/posts-filters' ); ?>
+
+        <div class="posts__container show_box">
+            <?php
+            if ( function_exists( 'render_posts_ajax' ) ) {
+                render_posts_ajax();
+            } elseif ( have_posts() ) :
+                while ( have_posts() ) : the_post();
                     get_template_part( 'tpl-parts/post-item' );
-                endwhile; endif;
-            } ?>
+                endwhile;
+            endif;
+            ?>
         </div>
     </div>
 </section>

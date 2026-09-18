@@ -25,7 +25,7 @@ require_once('admin-area/admin-area.php');
 require_once('shortcodes.php');
 
 // custom ajax functions
-//require_once('ajax.php');
+require_once('ajax.php');
 
 // custom posts duplicator
 require_once('plugins/duplicator.php');
@@ -58,6 +58,17 @@ function get_alt($id) {
 	return $c_alt?$c_alt:$c_tit;
 }
 
+// loading spinner markup, used by AJAX post filtering (inc/ajax.php, tpl-parts/posts-filters.php)
+function get_loader() {
+	return '<div class="loader"><span></span></div>';
+}
+
+// allowed tags for wp_kses() around get_loader()
+$GLOBALS['allowed_loader'] = [
+	'div'  => [ 'class' => true ],
+	'span' => [ 'class' => true ],
+];
+
 // run this code on 'after_theme_setup', when plugins have already been loaded
 add_action('after_setup_theme', 'wpa_activate_theme');
 // this function loads the plugins & updates some WordPress options
@@ -79,215 +90,178 @@ function wpa_discard_menu_classes($classes, $item) {
 }
 
 // new body classes
-function wpa_body_classes( $classes ){
-	if( is_page() ){
-		global $post;
-		$temp = get_page_template();
-		if ( $temp != null ) {
-			$path = pathinfo($temp);
-			$tmp = $path['filename'] . "." . $path['extension'];
-			$tn= str_replace(".php", "", $tmp);
-			$classes[] = $tn;
-		}
-//		if (is_active_sidebar('sidebar')) {
-//			$classes[] = 'with_sidebar';
-//		}
-		foreach($classes as $k => $v) {
-			if(
-				$v == 'page-template' ||
-				$v == 'page-id-'.$post->ID ||
-				$v == 'page-template-default' ||
-				$v == 'woocommerce-page' ||
-				($temp != null?($v == 'page-template-'.$tn.'-php' || $v == 'page-template-'.$tn):'')) unset($classes[$k]);
-		}
-	}
-	if( is_single() ){
-		global $post;
-		$f = get_post_format( $post->ID );
-		foreach($classes as $k => $v) {
-			if($v == 'postid-'.$post->ID || $v == 'single-format-'.(!$f?'standard':$f)) unset($classes[$k]);
-		}
-	}
+function wpa_body_classes( $classes ) {
+    global $post;
 
-	if ( is_multi_author() ) {
-		$classes[] = 'group-blog';
-	}
+    // 🧩 Add template name as class
+    if ( is_page() ) {
+        $template = basename( get_page_template() );
+        if ( $template ) {
+            $template_class = sanitize_html_class( str_replace( '.php', '', $template ) );
+            $classes[] = $template_class;
 
-	global $is_lynx, $is_gecko, $is_IE, $is_opera, $is_NS4, $is_safari, $is_chrome, $is_iphone;
+            // 🔍 Remove redundant template-related classes
+            $classes = array_filter( $classes, function( $class ) use ( $template_class ) {
+                $remove = [
+                    'page-template',
+                    'page-template-default',
+                    'woocommerce-page',
+                    'page-template-' . $template_class,
+                    'page-template-' . $template_class . '-php',
+                ];
+                return !in_array( $class, $remove, true );
+            });
+        }
+    }
 
-	$browser = $_SERVER[ 'HTTP_USER_AGENT' ];
+    // 📝 Cleanup post-related classes
+    if ( is_single() && isset( $post ) ) {
+        $format = get_post_format( $post->ID );
+        $classes = array_filter( $classes, function( $class ) use ( $post, $format ) {
+            return $class !== 'postid-' . $post->ID &&
+                   $class !== 'single-format-' . ( $format ?: 'standard' );
+        });
+    }
 
-	// Mac, PC ...or Linux
-	if ( preg_match( "/Mac/", $browser ) ){
-		$classes[] = 'macos';
-	} elseif ( preg_match( "/Windows/", $browser ) ){
-		$classes[] = 'windows';
-	} elseif ( preg_match( "/Linux/", $browser ) ) {
-		$classes[] = 'linux';
-	} else {
-		$classes[] = 'unknown-os';
-	}
-	// Checks browsers in this order: Chrome, Safari, Opera, MSIE, FF
-	if ( preg_match( "/Edge/", $browser ) ) {
-		$classes[] = 'edge';
-	} elseif ( preg_match( "/Chrome/", $browser ) ) {
-		$classes[] = 'chrome';
-		preg_match( "/Chrome\/(\d.\d)/si", $browser, $matches);
-		@$classesh_version = 'ch' . str_replace( '.', '-', $matches[1] );
-		$classes[] = $classesh_version;
-	} elseif ( preg_match( "/Safari/", $browser ) ) {
-		$classes[] = 'safari';
-		preg_match( "/Version\/(\d.\d)/si", $browser, $matches);
-		$sf_version = 'sf' . str_replace( '.', '-', $matches[1] );
-		$classes[] = $sf_version;
-	} elseif ( preg_match( "/Opera/", $browser ) ) {
-		$classes[] = 'opera';
-		preg_match( "/Opera\/(\d.\d)/si", $browser, $matches);
-		$op_version = 'op' . str_replace( '.', '-', $matches[1] );
-		$classes[] = $op_version;
-	} elseif ( preg_match( "/MSIE/", $browser ) ) {
-		$classes[] = 'msie';
-		if( preg_match( "/MSIE 6.0/", $browser ) ) {
-			$classes[] = 'ie6';
-		} elseif ( preg_match( "/MSIE 7.0/", $browser ) ){
-			$classes[] = 'ie7';
-		} elseif ( preg_match( "/MSIE 8.0/", $browser ) ){
-			$classes[] = 'ie8';
-		} elseif ( preg_match( "/MSIE 9.0/", $browser ) ){
-			$classes[] = 'ie9';
-		}
-	} elseif ( preg_match( "/Firefox/", $browser ) && preg_match( "/Gecko/", $browser ) ) {
-		$classes[] = 'firefox';
-		preg_match( "/Firefox\/(\d)/si", $browser, $matches);
-		$ff_version = 'ff' . str_replace( '.', '-', $matches[1] );
-		$classes[] = $ff_version;
-	} else {
-		$classes[] = 'unknown-browser';
-	}
+    // 👥 Multiauthor blog
+    if ( is_multi_author() ) {
+        $classes[] = 'group-blog';
+    }
 
-	return $classes;
+    // 💻 OS detection
+    $browser = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    if ( stripos( $browser, 'Mac' ) !== false ) {
+        $classes[] = 'macos';
+    } elseif ( stripos( $browser, 'Windows' ) !== false ) {
+        $classes[] = 'windows';
+    } elseif ( stripos( $browser, 'Linux' ) !== false ) {
+        $classes[] = 'linux';
+    } else {
+        $classes[] = 'unknown-os';
+    }
+
+    // 🌐 Browser detection (optional)
+    // Modern Chromium Edge sends "Edg/" (desktop), "EdgA/" (Android), "EdgiOS/" (iOS) —
+    // only legacy Edge used "Edge/". Both also contain "Chrome", so check Edge first.
+    if ( preg_match( '/Edg(?:A|iOS)?\//', $browser ) || stripos( $browser, 'Edge' ) !== false ) {
+        $classes[] = 'edge';
+    } elseif ( stripos( $browser, 'Chrome' ) !== false ) {
+        $classes[] = 'chrome';
+        if ( preg_match( '/Chrome\/(\d+\.\d+)/', $browser, $matches ) ) {
+            $classes[] = 'ch' . str_replace( '.', '-', $matches[1] );
+        }
+    } elseif ( stripos( $browser, 'Safari' ) !== false ) {
+        $classes[] = 'safari';
+        if ( preg_match( '/Version\/(\d+\.\d+)/', $browser, $matches ) ) {
+            $classes[] = 'sf' . str_replace( '.', '-', $matches[1] );
+        }
+    } elseif ( stripos( $browser, 'Opera' ) !== false ) {
+        $classes[] = 'opera';
+        if ( preg_match( '/Opera\/(\d+\.\d+)/', $browser, $matches ) ) {
+            $classes[] = 'op' . str_replace( '.', '-', $matches[1] );
+        }
+    } elseif ( stripos( $browser, 'MSIE' ) !== false ) {
+        $classes[] = 'msie';
+        if ( preg_match( '/MSIE\s(\d+\.\d+)/', $browser, $matches ) ) {
+            $classes[] = 'ie' . intval( $matches[1] );
+        }
+    } elseif ( stripos( $browser, 'Firefox' ) !== false && stripos( $browser, 'Gecko' ) !== false ) {
+        $classes[] = 'firefox';
+        if ( preg_match( '/Firefox\/(\d+)/', $browser, $matches ) ) {
+            $classes[] = 'ff' . $matches[1];
+        }
+    } else {
+        $classes[] = 'unknown-browser';
+    }
+
+    return $classes;
 }
+
+add_filter('body_class', 'wpa_body_classes');
 
 // custom SEO title
-function wpa_title(){
-	global $post;
-	if(!defined('WPSEO_VERSION')) {
-		if(is_404()) {
-			echo '404 Page not found - ';
-		} elseif((is_single() || is_page()) && $post->post_parent) {
-			$parent_title = get_the_title($post->post_parent);
-			echo wp_title('-', true, 'right') . esc_html($parent_title).' - ';
-        } elseif(class_exists('Woocommerce') && is_shop()) {
-            echo get_the_title(SHOP_ID) . ' - ';
-		} else {
-			wp_title('-', true, 'right');
-		}
-		bloginfo('name');
-	} else {
-		wp_title();
-	}
-}
+// wp_title() has been deprecated since WP 4.4 — use add_theme_support('title-tag')
+// (below, in wpa_init()) + the 'document_title_parts' filter instead. WP then
+// prints <title> itself via wp_head(), no manual echo needed in header.php.
+add_filter( 'document_title_parts', function ( $parts ) {
+    if ( defined( 'WPSEO_VERSION' ) ) {
+        return $parts; // Yoast already handles this
+    }
+
+    global $post;
+
+    if ( is_404() ) {
+        $parts['title'] = '404 Page not found';
+    } elseif ( ( is_single() || is_page() ) && ! empty( $post->post_parent ) ) {
+        $parts['title'] = get_the_title() . ' - ' . get_the_title( $post->post_parent );
+    } elseif ( class_exists( 'Woocommerce' ) && function_exists( 'is_shop' ) && is_shop() ) {
+        $parts['title'] = get_the_title( wc_get_page_id( 'shop' ) );
+    }
+
+    return $parts;
+});
 
 function wpa_init() {
-	// add support for page/post thumbnails
-	add_theme_support( 'post-thumbnails' );
+    // Enable post thumbnails support
+    add_theme_support( 'post-thumbnails' );
 
-	// security
-	// disable JSON API
-	add_filter('json_enabled', '__return_false');
-	add_filter('json_jsonp_enabled', '__return_false');
-	// remove REST API link tag from page header
-	remove_action( 'wp_head', 'rest_output_link_wp_head' );
+    // Auto <title> via wp_head() — see 'document_title_parts' filter above
+    add_theme_support( 'title-tag' );
 
-	// custom oEmbed rules
-	// turn off oEmbed auto discovery
-	add_filter( 'embed_oembed_discover', '__return_false' );
-	// remove JSON & XML oEmbed discovery links from front end
-	remove_action( 'wp_head', 'wp_oembed_add_discovery_links' );
+    // Remove unnecessary tags from wp_head
+    remove_action( 'wp_head', 'rsd_link' );
+    remove_action( 'wp_head', 'wlwmanifest_link' );
+    remove_action( 'wp_head', 'wp_generator' );
+    remove_action( 'wp_head', 'index_rel_link' );
+    remove_action( 'wp_head', 'parent_post_rel_link', 10 );
+    remove_action( 'wp_head', 'start_post_rel_link', 10 );
+    remove_action( 'wp_head', 'wp_shortlink_wp_head' );
+    remove_action( 'wp_head', 'adjacent_posts_rel_link_wp_head' );
 
-	// remove unnecessary code from wp_head
-	remove_action('wp_head', 'feed_links_extra', 3);
-	remove_action('wp_head', 'rsd_link');
-	remove_action('wp_head', 'wlwmanifest_link');
-	remove_action('wp_head', 'index_rel_link');
-	remove_action('wp_head', 'parent_post_rel_link', 10);
-	remove_action('wp_head', 'start_post_rel_link', 10);
-	remove_action('wp_head', 'wp_shortlink_wp_head' );
-	remove_action('wp_head', 'adjacent_posts_rel_link_wp_head' );
-	remove_action('wp_head', 'wp_generator');
-	remove_action('wp_head', 'rel_canonical');
+    // Disable Emoji across the frontend, admin, feeds, emails and TinyMCE
+    remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+    remove_action( 'wp_print_styles', 'print_emoji_styles' );
+    remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
+    remove_action( 'admin_print_styles', 'print_emoji_styles' );
+    remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
+    remove_filter( 'comment_text_rss', 'wp_staticize_emoji' );
+    remove_filter( 'embed_head', 'print_emoji_detection_script' );
+    remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
+    add_filter( 'tiny_mce_plugins', function( $plugins ) {
+        return is_array( $plugins ) ? array_diff( $plugins, [ 'wpemoji' ] ) : [];
+    });
+    if ( (int) get_option( 'use_smilies' ) === 1 ) {
+        update_option( 'use_smilies', 0 );
+    }
 
-	// remove global css vars
-	remove_action( 'wp_enqueue_scripts', 'wp_enqueue_global_styles' );
-	remove_action( 'wp_body_open', 'wp_global_styles_render_svg_filters' );
+    // Customize menu classes output
+    add_filter( 'nav_menu_css_class', 'wpa_discard_menu_classes', 10, 2 );
+    add_filter( 'nav_menu_item_id', '__return_false', 10 );
 
-	// remove Emoji
-	// prevent Emoji from loading on the front-end
-	remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
-	remove_action( 'wp_print_styles', 'print_emoji_styles' );
-	// remove from admin area also
-	remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
-	remove_action( 'admin_print_styles', 'print_emoji_styles' );
-	// remove from RSS feeds also
-	remove_filter( 'the_content_feed', 'wp_staticize_emoji');
-	remove_filter( 'comment_text_rss', 'wp_staticize_emoji');
-	// remove from embeds
-	remove_filter( 'embed_head', 'print_emoji_detection_script' );
-	// remove from emails
-	remove_filter( 'wp_mail', 'wp_staticize_emoji_for_email' );
-	// disable from TinyMCE editor, currently disabled in block editor by default
-	add_filter('tiny_mce_plugins', function($plugins) {
-		if(is_array($plugins)) { return array_diff($plugins, array('wpemoji')); } else { return array(); }
-	});
-	// finally, disable it from the database also, to prevent characters from converting
-	// earlier, there was a setting under Writings to do this
-	// it is not ideal to get & update it here - but it works for now
-	if( (int) get_option('use_smilies') === 1 ) { update_option( 'use_smilies', 0 ); }
+    // Extend and clean up body classes
+    add_filter( 'body_class', 'wpa_body_classes' );
 
-	// theme custom functions
-	// remove default menu classes + new custom classes
-	add_filter('nav_menu_css_class', 'wpa_discard_menu_classes', 10, 2);
-	// remove IDs from menu
-	add_filter('nav_menu_item_id', '__return_false', 10);
-	// new body classes
-	add_filter( 'body_class', 'wpa_body_classes' );
-	// remove <p> & <br> from CF7
-	add_filter('wpcf7_autop_or_not', '__return_false');
-
-	// outdated - temp not used
-	// disable responsive images
-	//add_filter( 'max_srcset_image_width', function(){ return 1; } );
-	// disable thumbnails embeds
-	//add_filter( 'embed_thumbnail_image_shape', '__return_false' );
+    // Prevent automatic <p> and <br> tags in Contact Form 7
+    add_filter( 'wpcf7_autop_or_not', '__return_false' );
 }
 add_action( 'init', 'wpa_init', 9999 );
 
 //remove gallery styles
 add_filter( 'use_default_gallery_style', '__return_false' );
 
-// Reading time
-if ( ! function_exists( 'gp_read_time' ) ) {
-    function gp_read_time() {
-        $text = get_the_content( '' );
-        $words = str_word_count( strip_tags( $text ), 0, 'AbcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' );
-        if ( !empty( $words ) ) {
-            $time_in_minutes = ceil( $words / 200 );
-            return $time_in_minutes;
+function wpa_html_lang($echo = true) {
+    $lang = get_locale();
+    if(function_exists('qtranxf_getLanguage')) {
+        $qconf = $GLOBALS['q_config'];
+        $curr  = qtranxf_getLanguage();
+        $lang  = $qconf['locale_html'][ $curr ];
+        if(empty($lang)) {
+            $lang = $qconf['locale'][ $curr ];
         }
-        return false;
+    }
+    if($echo) {
+        echo $lang;
+    } else {
+        return $lang;
     }
 }
-
-// custom var_dump
-function wpa_dump($variable) {
-	$pretty = function($v='',$c="&nbsp;&nbsp;&nbsp;&nbsp;",$in=-1,$k=null)use(&$pretty){$r='';if(in_array(gettype($v),array('object','array'))){$r.=($in!=-1?str_repeat($c,$in):'').(is_null($k)?'':"$k: ").'<br>';foreach($v as $sk=>$vl){$r.=$pretty($vl,$c,$in+1,$sk).'<br>';}}else{$r.=($in!=-1?str_repeat($c,$in):'').(is_null($k)?'':"$k: ").(is_null($v)?'&lt;NULL&gt;':"<strong>$v</strong>");}return$r;};
-	echo '<pre style="padding-left: 150px; font-family: Courier New"><code class="json">' . wp_kses_post($pretty($variable)) . '</code></pre>';
-}
-
-// custom loader
-function get_loader(){
-	return '<div class="show_box"><div class="loader"><svg class="circular" viewBox="25 25 50 50"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-miterlimit="10"/></svg></div></div>';
-}
-// allowed tags to use loader with escaping
-// usage - echo wp_kses(get_loader(), $GLOBALS['allowed_loader'])
-$allowed_loader = array( 'div' => array( 'class' => true ), 'svg' => array( 'class'   => true, 'viewbox' => true, ), 'circle' => array( 'class' => true, 'cx' => true, 'cy' => true, 'r' => true, 'fill' => true, 'stroke-miterlimit' => true, ), );

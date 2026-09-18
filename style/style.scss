@@ -1,5 +1,5 @@
-@import "core/core";
-@import 'core/classes';
-@import 'core/reset';
-@import "core/header";
-@import "core/footer";
+@use "core/core" as *;
+@use "core/classes";
+@use "core/reset";
+@use "core/header";
+@use "core/footer";

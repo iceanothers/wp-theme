@@ -1,4 +1,4 @@
-<?php get_header();
+<?php get_header(); /* Template Name: Contacts */
 $thumb_id = get_post_thumbnail_id( get_the_ID() );
 ?>
 

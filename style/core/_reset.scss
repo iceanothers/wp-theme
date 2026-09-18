@@ -1,48 +1,51 @@
-//RESET
+// RESET
+@use "../core/core" as *;
+@use "sass:color";
+
 * {
   margin: 0;
   padding: 0;
-  outline: 0;
   box-sizing: border-box;
-  -webkit-box-sizing: border-box;
 }
 
-html {
-  -webkit-font-smoothing: antialiased;
-  -webkit-overflow-scrolling: touch;
-  -webkit-text-size-adjust: none;
-}
-
-a, a:hover, input, textarea, select {
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-}
-
-ol {
-  list-style: decimal inside;
-  margin-bottom: 20px;
-  li {
-    padding: 5px 0 5px 15px;
-  }
+a,
+input,
+textarea,
+select {
+  tap-highlight-color: rgb(0 0 0 / 0%);
 }
 
 ul {
   list-style: none;
 }
 
-blockquote, q {
-  quotes: none;
+ol {
+  list-style: decimal inside;
+  margin-bottom: 20px;
+
+  li {
+    padding: 5px 0 5px 15px;
+  }
 }
 
-blockquote:before, blockquote:after, q:before, q:after {
-  content: '';
+blockquote,
+q {
+  quotes: none;
+
+  &::before,
+  &::after {
+    content: "";
+  }
 }
 
 :focus {
-  outline: 0;
+  outline: none;
 }
 
-a img, fieldset, hr {
-  border: 0;
+img,
+fieldset,
+hr {
+  border: none;
 }
 
 mark {
@@ -58,39 +61,28 @@ td {
   vertical-align: middle;
 }
 
-input[type="text"], input[type="email"], input[type="tel"], input[type="search"], select, textarea {
-  @include transition();
-  border-radius: 0;
-  -webkit-appearance: none;
+::selection {
+  color: #fff;
+  background-color: $bg;
 }
-
-input[type="submit"], input[type="button"], button, .button {
-  @include transition();
-  -webkit-appearance: none;
-  cursor: pointer;
-  border: none;
-}
-
-input::-webkit-input-placeholder, textarea::-webkit-input-placeholder {
-  color: #707070;
-}
-
-input::-moz-placeholder, textarea::-moz-placeholder {
-  color: #707070;
-  opacity: 1;
-}
-
-// selection
-::selection {color: #fff; background-color: $bg}
-::-moz-selection {color: #fff; background-color: $bg}
 
 .clear {
+  display: block;
   clear: both;
   overflow: hidden;
-  display: block;
 }
 
-article, aside, details, figcaption, figure, footer, header, nav, section, summary, main {
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+nav,
+section,
+summary,
+main {
   display: block;
 }
 
@@ -98,31 +90,37 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
+
   &.alignleft {
     float: none;
     margin: 0 auto 20px;
-    @include rwd-min(1081){
+
+    @include rwd-min(1081) {
       float: left;
       margin: 0 30px 10px 0;
     }
   }
+
   &.alignright {
     float: none;
     margin: 0 auto 20px;
-    @include rwd-min(1081){
+
+    @include rwd-min(1081) {
       float: right;
       margin: 0 0 10px 30px;
     }
   }
+
   &.aligncenter {
     margin: 0 auto 20px;
   }
+
   &.alignnone {
     margin: 0 0 20px;
   }
 }
 
-//Fullframe
+// Fullframe
 .fullframe {
   height: 0;
   margin: 0;
@@ -130,6 +128,7 @@ img {
   padding-bottom: 56.5%;
   position: relative;
   z-index: 0;
+
   iframe, object, embed {
     height: 100%;
     left: 0;
@@ -140,23 +139,7 @@ img {
   }
 }
 
-.gallery {
-  @extend .flex_grid__mob;
-  @include rwd-max(767){
-    .gallery-item {
-      margin-bottom: 20px;
-      img {
-        margin: 0 auto;
-      }
-    }
-  }
-
-  br {
-    display: none;
-  }
-}
-
-//CONTACT FORM
+// CONTACT FORM
 div.wpcf7 {
   .wpcf7-form-control-wrap {
     display: block !important;
@@ -164,17 +147,16 @@ div.wpcf7 {
     clear: both;
     position: relative;
   }
+
   .screen-reader-response {
     display: none;
   }
+
   .wpcf7-not-valid-tip {
     background: $c2;
-    border: 1px solid #FF0000;
+    border: 1px solid #F00;
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    inset: 0;
     cursor: pointer;
     font-family: $f;
     height: $inputH;
@@ -182,25 +164,29 @@ div.wpcf7 {
     padding: 0 10px;
     text-align: left;
   }
+
   .wpcf7-response-output {
     width: 100%;
-    margin: 10px 0 0 0;
+    margin: 10px 0 0;
     font-family: $f;
     font-size: 12px;
     line-height: 20px;
     padding: 5px 20px;
     text-align: center;
   }
+
   .invalid {
     .wpcf7-response-output {
       border: 2px solid #ffb900;
     }
   }
+
   .sent {
     .wpcf7-response-output {
       border: 2px solid green;
     }
   }
+
   .ajax-loader {
     display: none;
   }
@@ -214,26 +200,31 @@ span.wpcf7-list-item {
   display: block;
   margin: 0;
   font-size: 14px;
+
   label {
     display: inline-block;
+
     span {
       position: relative;
       display: inline-block;
       vertical-align: middle;
       padding-left: 35px;
       cursor: pointer;
-      &:before {
+
+      &::before {
         position: absolute;
         top: 0;
         left: 0;
         width: 22px;
         height: 22px;
-        content: '';
+        content: "";
         border: 1px solid $c;
-        @include transition();
+
+        @include transition;
       }
-      &:after {
-        content: '';
+
+      &::after {
+        content: "";
         display: block;
         position: absolute;
         top: 2px;
@@ -244,13 +235,16 @@ span.wpcf7-list-item {
         border-width: 0 2px 2px 0;
         transform: rotate(45deg);
         opacity: 0;
-        @include transition();
+
+        @include transition;
       }
     }
+
     input {
       display: none;
+
       &:checked + span {
-        &:after {
+        &::after {
           opacity: 1;
         }
       }
@@ -260,6 +254,7 @@ span.wpcf7-list-item {
 
 #searchForm {
   position: relative;
+
   button {
     position: absolute;
     right: 0;
@@ -269,6 +264,7 @@ span.wpcf7-list-item {
     width: 50px;
     text-align: center;
     font-size: 20px;
+
     &:hover {
       background: $bg;
       color: $c2;
@@ -276,52 +272,67 @@ span.wpcf7-list-item {
   }
 }
 
-//PAGE 404
+// PAGE 404
 .error404 {
   .content {
     text-align: center;
+
     h1 {
-      font-size: rem(55);
+      font-size: 55px;
       line-height: 1.2;
       padding-bottom: 40px;
       font-weight: 400;
+
       span {
-        font-size: rem(80);
+        font-size: 70px;
         line-height: 1.2;
         color: $bg;
         font-weight: 700;
       }
     }
+
     p {
-      font-size: rem(18);
+      font-size: 18px;
     }
   }
 }
 
 html {
-  font: 400 #{$fb * 0.8}/1.42 $f;
-  -ms-text-size-adjust: none;
   scroll-behavior: smooth;
-  -webkit-text-size-adjust: none;
-  -webkit-overflow-scrolling: touch;
   -webkit-font-smoothing: antialiased;
-  @include rwd-range(1080, 768) {font-size: $fb * 0.8}
-  @include rwd-range(1366, 1081) {font-size: $fb * 0.9}
-  @include rwd-min(1367) {font-size: $fb}
+  -webkit-overflow-scrolling: touch;
+  text-size-adjust: none;
+  font: 400 #{$fb * 0.8}/1.42 $f;
+
+  @include rwd-range(1080, 768) {
+    font-size: $fb * 0.8;
+  }
+
+  @include rwd-range(1366, 1081) {
+    font-size: $fb * 0.9;
+  }
+
+  @include rwd-min(1367) {
+    font-size: $fb;
+  }
 }
 
 body {
   color: $c;
-  @include flexbox;
-  @include flex-direction(column);
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  opacity: 1;
-  @include rwd-max(1080) { &.is_overflow {overflow: hidden} }
+
+  @include rwd-max(1080) {
+    &.is_overflow {
+      overflow: hidden;
+    }
+  }
 }
 
 #main {
   overflow: hidden;
-  @include flex(1, 0, auto);
+  flex: 1 0 auto;
   width: 100%;
 }
 
@@ -330,20 +341,35 @@ body {
   width: $w;
   max-width: 92%;
   position: relative;
-  @include rwd-min(1081){
+
+  @include rwd-min(1081) {
     max-width: 96%;
   }
 }
 
-// custom scrollbar
+// Custom scrollbar
 html::-webkit-scrollbar {
   width: 6px;
-  @include rwd-min(1081) {width: 10px}
+
+  @include rwd-min(1081) {
+    width: 10px;
+  }
 }
-::-webkit-scrollbar-thumb {background: $bg}
-::-webkit-scrollbar-track {background: #eaeaea}
-::-webkit-scrollbar-thumb:hover {background: darken($bg, 5%)}
-::-webkit-scrollbar-thumb:active {background: darken($bg, 5%)}
+
+::-webkit-scrollbar-thumb {
+  background: $bg;
+}
+
+::-webkit-scrollbar-track {
+  background: #eaeaea;
+}
+
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active {
+  background: color.adjust($bg, $lightness: -5%);
+
+}
+
 :root {
   scrollbar-width: thin;
   scrollbar-color: $bg #eaeaea;

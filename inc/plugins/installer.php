@@ -24,11 +24,6 @@ function wpa_register_recommended_plugins() {
             'required'  => false,
         ),
         array(
-            'name' => 'SCSS',
-            'slug' => 'happy-scss-compiler',
-            'required' => true,
-        ),
-        array(
             'name'      => 'Advanced Editor Tools (previously TinyMCE Advanced)',
             'slug'      => 'tinymce-advanced',
             'required'  => false,

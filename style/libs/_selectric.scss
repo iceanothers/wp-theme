@@ -1,13 +1,13 @@
 // custom select
-$selectric-main-color:      $c !default;                                              // Color used in border
-$selectric-text-color:      $c1 !default;                                           // Color used in label
-$selectric-bg-color:        #fff !default;                                           // Background color
-$selectric-height:          40px !default;                                              // Outer height
-$selectric-spacing:         15px !default;                                              // Label left padding
-$selectric-border-width:    2px !default;                                               // Outer border width
-$selectric-border-radius:   0 !default;                                                 // Border radius
-$selectric-inner-height:    $selectric-height - ($selectric-border-width * 2) !default; // Inner height
-$selectric-font-size:       12px !default;                                              // Font size
+$selectric-main-color: $c !default;                                              // Color used in border
+$selectric-text-color: $c1 !default;                                           // Color used in label
+$selectric-bg-color: #fff !default;                                           // Background color
+$selectric-height: 40px !default;                                              // Outer height
+$selectric-spacing: 15px !default;                                              // Label left padding
+$selectric-border-width: 2px !default;                                               // Outer border width
+$selectric-border-radius: 0 !default;                                                 // Border radius
+$selectric-inner-height: $selectric-height - ($selectric-border-width * 2) !default; // Inner height
+$selectric-font-size: 12px !default;                                              // Font size
 
 .selectric-wrapper {
   position: relative;
@@ -40,22 +40,29 @@ $selectric-font-size:       12px !default;                                      
 
   .select_arrow {
     @include center(false, true);
+
     right: 21px;
-    &:after, &:before {
-      @include transition();
-      content: '';
+
+    &::after, &::before {
+      @include transition;
+
+      content: "";
       position: absolute;
       top: 50%;
       width: 11px;
       height: 2px;
       background: $bg;
     }
-    &:after {
+
+    &::after {
       left: -2px;
+
       @include transform(translate(0, -50%) rotate(-45deg));
     }
-    &:before {
+
+    &::before {
       right: -2px;
+
       @include transform(translate(0, -50%) rotate(45deg));
     }
   }
@@ -118,7 +125,6 @@ $selectric-font-size:       12px !default;                                      
   height: 1px !important;
   outline: none !important;
   border: none !important;
-  *font: 0/0 a !important;
   background: none !important;
 }
 
@@ -143,16 +149,19 @@ $selectric-font-size:       12px !default;                                      
     height: 100%;
     overflow: auto;
     scrollbar-width: thin;
-    scrollbar-color: $bg #CCDDEE;
+    scrollbar-color: $bg #CDE;
+
     // custom scrollbar - chrome
     &::-webkit-scrollbar {
       width: 4px;
+
       @include rwd-min(1025) {width: 4px}
     }
     &::-webkit-scrollbar-thumb {background-color: $bg}
-    &::-webkit-scrollbar-track {background-color: #CCDDEE}
+    &::-webkit-scrollbar-track {background-color: #CDE}
     &::-webkit-scrollbar-thumb:hover {background-color: darken($bg, 5%)}
     &::-webkit-scrollbar-thumb:active {background-color: darken($bg, 5%)}
+
     // custom scrollbar - firefox
   }
 
@@ -168,12 +177,14 @@ $selectric-font-size:       12px !default;                                      
   }
 
   li {
-    @include transition();
+    @include transition;
+
     display: block;
     padding: 25px 15px;
     color: $selectric-text-color;
     cursor: pointer;
     border-top: 2px solid $bg;
+
     &:first-child {
       border: none;
     }

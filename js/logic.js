@@ -1,58 +1,66 @@
+// Ensure global jQuery reference
 $ = jQuery;
-$(document).ready(function () {
-    var width = document.body.clientWidth;
 
-    $("#menuOpen").click(function (e) {
-        $(this).toggleClass("opened");
-        $("body").toggleClass("is_overflow");
+// AJAX posts filtering / load more (inc/ajax.php, tpl-parts/posts-filters.php)
+import './ajax.js';
+
+$(document).ready(function () {
+    const width = document.body.clientWidth;
+    // Toggle mobile menu
+    $('#menuOpen').on('click', function () {
+        $(this).toggleClass('opened');
+        $('body').toggleClass('is_overflow');
     });
 
-    if (width >= 1081) {
+    // Mobile navigation dropdown
+    if (width < 1081) {
+        $('#mainMenu .menu-item-has-children > a').append('<span></span>');
 
-    } else {
-        $("#mainMenu .menu-item-has-children > a").append("<span></span>");
-        $("#mainMenu .menu-item-has-children span").click(function () {
+        $('#mainMenu .menu-item-has-children span').on('click', function () {
             $(this).parent().next().slideToggle(300);
-            $(this).toggleClass("active");
+            $(this).toggleClass('active');
             return false;
         });
+
+        // Remove empty <p> tags
         $('p').each(function () {
-            var $this = $(this);
-            if ($this.html().replace(/\s|&nbsp;/g, '').length == 0)
+            const $this = $(this);
+            if ($this.html().replace(/\s|&nbsp;/g, '').length === 0) {
                 $this.remove();
+            }
         });
     }
 
-    // swiper - block__custom_slider
+    /*// Swiper sliders initialization
     $('.slider').each(function () {
-        let slider_holder = $(this),
-            swiper_instance = slider_holder.find('.swiper'),
-            prev = slider_holder.find('.swiper-prev'),
-            next = slider_holder.find('.swiper-next');
-            pagination = slider_holder.find('.swiper-pagination');
+        const slider = $(this);
+        const swiperEl = slider.find('.swiper')[0];
+        const prevEl = slider.find('.swiper-prev')[0];
+        const nextEl = slider.find('.swiper-next')[0];
+        const paginationEl = slider.find('.swiper-pagination')[0];
 
-        let block_slider = new Swiper(swiper_instance[0], {
+        new Swiper(swiperEl, {
             spaceBetween: 20,
             slidesPerView: 1,
             watchOverflow: true,
             autoHeight: true,
             navigation: {
-                nextEl: next[0],
-                prevEl: prev[0]
+                nextEl: nextEl,
+                prevEl: prevEl
             },
             pagination: {
-                el: pagination[0],
+                el: paginationEl,
                 type: 'bullets',
                 clickable: true
             },
             grabCursor: true,
-            effect: "creative",
+            effect: 'creative',
             creativeEffect: {
                 prev: {
-                    translate: ["-20%", 0, -1],
+                    translate: ['-20%', 0, -1],
                 },
                 next: {
-                    translate: ["100%", 0, 0],
+                    translate: ['100%', 0, 0],
                 },
             },
             breakpoints: {
@@ -65,33 +73,35 @@ $(document).ready(function () {
                 }
             }
         });
-    });
+    });*/
 
-    // custom select
-    if($('select').length > 0) {
+    // Custom select styling
+    /*if ($('select').length > 0) {
         $('select').selectric({
             disableOnMobile: false,
             nativeOnMobile: false,
             arrowButtonMarkup: '<span class="select_arrow"></span>'
         });
+
+        // Optional: reset first option for CF7 selects
         // $('select.wpcf7-form-control').each(function () {
         //     $(this).find('option').first().val('');
         // });
-    }
+    }*/
 
-    //WPCF7
-    $(this).on('click', '.wpcf7-not-valid-tip', function () {
+    // Contact Form 7 - remove validation tip on click
+    $(document).on('click', '.wpcf7-not-valid-tip', function () {
         $(this).prev().trigger('focus');
         $(this).fadeOut(500, function () {
             $(this).remove();
         });
     });
 
-    $("iframe").wrap("<div class='fullframe'></div>");
+    // Make iframe responsive
+    $('iframe').wrap("<div class='fullframe'></div>");
 
-    $(window).bind("resize", function () {
-
+    // Window resize (empty, reserved for future logic)
+    $(window).on('resize', function () {
+        // Add responsive handling if needed
     });
-
-
 });

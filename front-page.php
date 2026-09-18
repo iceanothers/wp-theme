@@ -3,9 +3,9 @@ $thumb_id = get_post_thumbnail_id( get_the_ID() );
 ?>
 
 <section class="topPanel">
-    <?php if ( has_post_thumbnail( $thumb_id ) ) { ?>
+    <?php if ( has_post_thumbnail() ) { ?>
         <figure>
-            <?php echo wp_get_attachment_image( $thumb_id, 'full', false, array( 'alt' => get_alt( $thumb_id ), 'class' => 'cover' ) ); ?>
+            <?php echo wp_get_attachment_image( $thumb_id, 'hero', false, array( 'alt' => get_alt( $thumb_id ), 'class' => 'cover' ) ); ?>
         </figure>
     <?php } ?>
     <div class="container">

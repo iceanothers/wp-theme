@@ -1,15 +1,10 @@
-/*jslint browser: true, white: true, plusplus: true, regexp: true, indent: 4, maxerr: 50, es5: true */
-/*jshint multistr: true, latedef: nofunc */
-/*global jQuery, $, Swiper*/
+// self-contained: don't rely on logic.js's `$ = jQuery;` assignment running
+// first — ES module imports execute before the importing module's own body.
+const $ = window.jQuery;
 
-
-// ajax posts - loading + filtering
-function load_posts_ajax(paged, category) {
-    if(!paged) {
-        paged = 1;
-    }
-
-    var ajax_content = $('.posts__container');
+// Load posts via AJAX
+function load_posts_ajax(paged = 1, category = '*') {
+    const ajaxContent = $('.posts__container');
 
     $.ajax({
         type: 'POST',
@@ -23,81 +18,73 @@ function load_posts_ajax(paged, category) {
             $('.loader_holder').remove();
 
             if (paged !== 1) {
-                ajax_content.append(html);
+                ajaxContent.append(html);
             } else {
-                ajax_content.html(html);
+                ajaxContent.html(html);
+                $('html, body').animate({ scrollTop: ajaxContent.offset().top - 50 }, 400);
             }
 
             $('.show_box').removeClass('is_loading');
         }
-
     });
 
     return false;
 }
 
-
 $(document).ready(function () {
     'use strict';
 
-    // ajax posts - filtering
-    var posts_filters = $('.posts__filters a'),
-        posts_dropdown = $('.posts__dropdown');
+    const postsFilters = $('.posts__filters a');
+    const postsDropdown = $('.posts__dropdown');
 
-    // desktop
-    posts_filters.on('click', function () {
-        $(this).parents('.posts__filtering').find('.show_box').addClass('is_loading');
-
-        var cat = $(this).attr('href');
+    // Filter by category - desktop
+    postsFilters.on('click', function () {
+        const cat = $(this).attr('href');
+        $('.posts__filtering .show_box').addClass('is_loading');
 
         load_posts_ajax(1, cat);
 
-        $('.posts__filters a').removeClass('is_filtered');
+        postsFilters.removeClass('is_filtered');
         $(this).addClass('is_filtered');
 
         window.location.hash = cat;
-
         return false;
     });
-    // desktop - hash catch
-    posts_filters.each(function() {
-        var hash = $(this).attr('href');
-        if (hash === window.location.hash) {
-            $(this).click();
+
+    // Apply filter from URL hash - desktop
+    postsFilters.each(function () {
+        if ($(this).attr('href') === window.location.hash) {
+            $(this).trigger('click');
         }
     });
 
-    // mobile
-    posts_dropdown.on('change', function () {
-        $(this).parents('.posts__filtering').find('.show_box').addClass('is_loading');
-
-        var cat = $(this).val();
+    // Filter by category - mobile
+    postsDropdown.on('change', function () {
+        const cat = $(this).val();
+        $('.posts__filtering .show_box').addClass('is_loading');
 
         load_posts_ajax(1, cat);
-
         window.location.hash = cat;
     });
-    // mobile - hash catch
-    posts_dropdown.find('option').each(function() {
-        var hash = $(this).val();
-        if (hash === window.location.hash) {
-            var ti = $(this).index();
-            posts_dropdown.prop('selectedIndex', ti).selectric('refresh');
+
+    // Apply filter from URL hash - mobile
+    postsDropdown.find('option').each(function () {
+        if ($(this).val() === window.location.hash) {
+            $(this).prop('selected', true).trigger('change');
         }
     });
 
-    // ajax posts - page loading
-    $(this).on('click', '.load_more__posts', function () {
-        $(this).parent().next().find('.show_box').addClass('is_loading');
+    // Load More
+    $(document).on('click', '.load_more__posts', function () {
+        const btn = $(this);
+        const nextPage = btn.data('href');
+        const category = btn.data('cat');
 
-        var pg = $(this).attr('data-href'),
-            cat = $(this).attr('data-cat');
+        $('.posts__container .show_box').addClass('is_loading');
 
-        load_posts_ajax(pg === 1 ? 2 : pg, cat);
-
-        $(this).parent().remove();
+        load_posts_ajax(nextPage, category);
+        btn.parent().remove();
 
         return false;
     });
-
 });

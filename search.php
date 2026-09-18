@@ -1,11 +1,4 @@
-<?php
-get_header();
-
-$i_query = array(
-	'paged' => 1,
-	's'     => $s,
-);
-?>
+<?php get_header(); ?>
 
 <section class="top_panel">
     <div class="container">
@@ -16,13 +9,11 @@ $i_query = array(
 <section class="search_page">
     <div class="container">
         <div class="search_results">
-            <?php if ( function_exists( 'load_search_ajax' ) ) :
-                load_search_ajax( $i_query );
-            else :
-	            if (have_posts()) : while (have_posts()) : the_post();
-		            get_template_part( 'tpl-parts/post-item' );
-	            endwhile; endif;
-            endif; ?>
+            <?php if ( have_posts() ) : while ( have_posts() ) : the_post();
+                get_template_part( 'tpl-parts/post-item' );
+            endwhile; else : ?>
+                <div><h3 class="custom_coming_soon">Oops! Nothing found.</h3></div>
+            <?php endif; ?>
         </div>
     </div>
 </section>

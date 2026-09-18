@@ -1,65 +1,71 @@
 <?php
 
-// run pre-installed plugins
-require_once('inc/themer.php');
+// Load core theme logic from external file
+require_once get_template_directory() . '/inc/themer.php';
 
-// register menus
-register_nav_menus(array(
-    'main_menu' => 'Main menu',
-    //'footer_menu' => 'Footer menu',
-));
+// Register navigation menus
+register_nav_menus([
+    'main_menu' => 'Main Menu',
+    // 'footer_menu' => 'Footer Menu',
+]);
 
-//register sidebar
-$reg_sidebars = array (
-    'blog_sidebar'     => 'Blog Sidebar'
-);
-foreach ( $reg_sidebars as $id => $name ) {
-    register_sidebar(
-        array (
-            'name'          => __( $name ),
-            'id'            => $id,
-            'before_widget' => '<div class="widget %2$s">',
-            'after_widget'  => '</div>',
-            'before_title'  => '<h2 class="widgetTitle">',
-            'after_title'   => '</h2>',
-        )
-    );
+// Register sidebars
+$sidebars = [
+    'blog_sidebar' => 'Blog Sidebar',
+];
+
+foreach ( $sidebars as $id => $name ) {
+    register_sidebar([
+        'name'          => __( $name, 'textdomain' ),
+        'id'            => $id,
+        'before_widget' => '<div class="widget %2$s">',
+        'after_widget'  => '</div>',
+        'before_title'  => '<h2 class="widgetTitle">',
+        'after_title'   => '</h2>',
+    ]);
 }
 
-// custom images sizes
-add_image_size('full', '1920', '', true);
+// Register custom image size
+// NOTE: 'full' is a reserved WP size name (means "original upload") — do not
+// reuse it here, it silently breaks wp_get_attachment_image(..., 'full', ...)
+// everywhere in the theme. Use a distinct name instead.
+add_image_size( 'hero', 1920, 0, true );
 
-// get post taxonomy
-function custom_tax($pid, $tax) {
-	if ( get_the_terms( $pid, $tax ) ) {
-		$post_tax = get_the_terms( $pid, $tax );
-		$taxs = '';
-		$co = count( $post_tax );
-		$i = 1;
-		foreach ( $post_tax as $t ) {
-			$tax = get_term( $t );
-			$taxs .= '<span class="tax_term">' . $tax->name . '</span>' . ( $i ++ != $co ? '<span>,</span> ' : '' );
-		}
-
-		return $taxs;
-	}
+// Return post terms as plain text
+function custom_tax( $post_id, $taxonomy ) {
+    $terms = get_the_terms( $post_id, $taxonomy );
+    if ( is_array( $terms ) ) {
+        $output = '';
+        $count = count( $terms );
+        foreach ( $terms as $i => $term ) {
+            $output .= '<span class="tax_term">' . esc_html( $term->name ) . '</span>';
+            if ( $i !== $count - 1 ) {
+                $output .= '<span>,</span> ';
+            }
+        }
+        return $output;
+    }
+    return '';
 }
 
-// custom templates slugs to use with custom_tax_linked() function
+// Base slug used for taxonomy-linked output
 const CUSTOM_TEMPLATE_SLUG = '/custom-post-type/';
 
-// get post taxonomy as hash with related template slug
-function custom_tax_linked($pid, $tax, $template_slug) {
-	if ( get_the_terms($pid, $tax) ) {
-		$post_tax = get_the_terms( $pid, $tax );
-		$taxs = '';
-		$co = count( $post_tax );
-		$i = 1;
-		foreach ( $post_tax as $t ) {
-			$tax = get_term( $t );
-			$taxs .= '<a href="' . $template_slug . '#' . $tax->slug . '" class="tax_term">' . $tax->name . '</a>' . ( $i ++ != $co ? '<span>,</span> ' : '' );
-		}
-
-		return $taxs;
-	}
+// Return post terms as linked anchors
+function custom_tax_linked( $post_id, $taxonomy, $template_slug = CUSTOM_TEMPLATE_SLUG ) {
+    $terms = get_the_terms( $post_id, $taxonomy );
+    if ( is_array( $terms ) ) {
+        $output = '';
+        $count = count( $terms );
+        foreach ( $terms as $i => $term ) {
+            $slug = esc_attr( $term->slug );
+            $name = esc_html( $term->name );
+            $output .= '<a href="' . esc_url( $template_slug . '#' . $slug ) . '" class="tax_term">' . $name . '</a>';
+            if ( $i !== $count - 1 ) {
+                $output .= '<span>,</span> ';
+            }
+        }
+        return $output;
+    }
+    return '';
 }

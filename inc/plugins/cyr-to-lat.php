@@ -83,7 +83,7 @@ function ctl_sanitize_title($title)
             break;
         }
     }
-    $term = $is_term ? $wpdb->get_var("SELECT slug FROM {$wpdb->terms} WHERE name = '$title'") : '';
+    $term = $is_term ? $wpdb->get_var( $wpdb->prepare( "SELECT slug FROM {$wpdb->terms} WHERE name = %s", $title ) ) : '';
     if (empty($term)) {
         $title = strtr($title, apply_filters('ctl_table', $iso9_table));
         if (function_exists('iconv')) {

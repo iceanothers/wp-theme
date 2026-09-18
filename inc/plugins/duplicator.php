@@ -11,7 +11,14 @@ function tt_wp_duplicate_posts(){
     /*
      * get the original post id
      */
-    $post_id = (isset($_GET['post']) ? $_GET['post'] : $_POST['post']);
+    $post_id = absint( $_GET['post'] ?? $_POST['post'] ?? 0 );
+
+    check_admin_referer( 'tt_wp_duplicate_posts_' . $post_id );
+
+    if ( ! current_user_can( 'edit_post', $post_id ) ) {
+        wp_die( 'You are not allowed to duplicate this post.' );
+    }
+
     /*
      * and all the original post data then
      */
@@ -63,18 +70,20 @@ function tt_wp_duplicate_posts(){
         }
 
         /*
-         * duplicate all post meta just in two SQL queries
+         * duplicate all post meta
          */
-        $post_meta_infos = $wpdb->get_results("SELECT meta_key, meta_value FROM $wpdb->postmeta WHERE post_id=$post_id");
-        if (count($post_meta_infos)!=0) {
-            $sql_query = "INSERT INTO $wpdb->postmeta (post_id, meta_key, meta_value) ";
-            foreach ($post_meta_infos as $meta_info) {
-                $meta_key = $meta_info->meta_key;
-                $meta_value = addslashes($meta_info->meta_value);
-                $sql_query_sel[]= "SELECT $new_post_id, '$meta_key', '$meta_value'";
-            }
-            $sql_query.= implode(" UNION ALL ", $sql_query_sel);
-            $wpdb->query($sql_query);
+        $post_meta_infos = $wpdb->get_results(
+            $wpdb->prepare( "SELECT meta_key, meta_value FROM $wpdb->postmeta WHERE post_id = %d", $post_id )
+        );
+        foreach ( $post_meta_infos as $meta_info ) {
+            $wpdb->insert(
+                $wpdb->postmeta,
+                [
+                    'post_id'    => $new_post_id,
+                    'meta_key'   => $meta_info->meta_key,
+                    'meta_value' => $meta_info->meta_value,
+                ]
+            );
         }
 
 
@@ -93,8 +102,12 @@ add_action( 'admin_action_tt_wp_duplicate_posts', 'tt_wp_duplicate_posts' );
  * Add the duplicate link to action list for post_row_actions
  */
 function tt_wp_duplicate_post_link( $actions, $post ) {
-    if (current_user_can('edit_posts')) {
-        $actions['duplicate'] = '<a href="admin.php?action=tt_wp_duplicate_posts&amp;post=' . $post->ID . '" rel="permalink"><span class="dashicons dashicons-arrow-left-alt2" style="font-size: 8px;vertical-align: baseline"></span>Duplicate<span class="dashicons dashicons-arrow-right-alt2" style="font-size: 8px;vertical-align: baseline"></span></a>';
+    if (current_user_can('edit_post', $post->ID)) {
+        $url = wp_nonce_url(
+            admin_url( 'admin.php?action=tt_wp_duplicate_posts&post=' . $post->ID ),
+            'tt_wp_duplicate_posts_' . $post->ID
+        );
+        $actions['duplicate'] = '<a href="' . esc_url( $url ) . '" rel="permalink"><span class="dashicons dashicons-arrow-left-alt2" style="font-size: 8px;vertical-align: baseline"></span>Duplicate<span class="dashicons dashicons-arrow-right-alt2" style="font-size: 8px;vertical-align: baseline"></span></a>';
     }
     return $actions;
 }

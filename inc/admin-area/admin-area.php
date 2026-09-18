@@ -38,11 +38,18 @@ function wpa_clear_theme_subpages(){
     unset($submenu['themes.php'][5]); // remove Customize link
     unset($submenu['themes.php'][6]); // remove Themes link
 }
-if ( !current_user_can( 'activate_plugins' ) ) {
-    $roleObject = get_role( 'editor' );
-    $roleObject->add_cap( 'edit_theme_options' );
-    add_action('admin_menu', 'wpa_clear_theme_subpages');
-}
+// current_user_can() is unreliable before 'init' (current user isn't resolved yet)
+// — this ran at file-parse time before. Also gate add_cap() behind admin so we're
+// not doing a DB write (get_role()->add_cap() always persists) on every front-end request.
+add_action( 'admin_init', function () {
+    if ( ! current_user_can( 'activate_plugins' ) ) {
+        $roleObject = get_role( 'editor' );
+        if ( $roleObject && ! $roleObject->has_cap( 'edit_theme_options' ) ) {
+            $roleObject->add_cap( 'edit_theme_options' );
+        }
+        add_action( 'admin_menu', 'wpa_clear_theme_subpages' );
+    }
+});
 
 // dashboard - clean dashboard meta_boxes
 function wpa_remove_dashboard_widgets () {
@@ -108,4 +115,4 @@ add_filter( 'render_block', function( $block_content, $block ) {
 }, 10, 2 );
 
 // general - remove admin bar on front end
-add_filter( 'show_admin_bar', '__return_false' );
+//add_filter( 'show_admin_bar', '__return_false' );
